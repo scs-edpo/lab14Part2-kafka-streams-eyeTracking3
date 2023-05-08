@@ -40,30 +40,28 @@ The [ClicksProducer](ClicksProducer/src/main/java/ClicksProducer.java) class is 
 
 ### Topology
 
-1. **Define Serdes**: Define Serdes for Fixation, FixationStats, Click, and FixationClick classes, named `fixationSerde`, `fixationStatsSerde`, `clickSerde`, and `fixationClickSerde` respectively. These Serdes are used to convert data between different formats.
+1. **Stream Fixation events**: Create a KStream named `fixationStream` to consume fixation events from a Kafka topic named "fixations" using the `fixationConsumerOptions` which specifies the Serdes and timestamp extractor.
 
-2. **Stream Fixation events**: Create a KStream named `fixationStream` to consume fixation events from a Kafka topic named "fixations" using the `fixationConsumerOptions` which specifies the Serdes and timestamp extractor.
-
-3. **Stateless processing for fixations**: Perform several operations on the `fixationStream`:
+2. **Stateless processing for fixations**: Perform several operations on the `fixationStream`:
    - Content filtering: Create a new KStream named `contentFilteredFixations` that keeps only relevant attributes.
    - Event filtering: Create a new KStream named `eventFilteredFixations` that keeps only fixations with duration above or equal to 60 ms.
    - Event translation: Create a new KStream named `eventTranslatedFixations` that finds the AOI based on the X and Y positions of the fixation.
 
-4. **Stateful processing for fixations**: Define a KTable named `fixationStats` that stores the aggregated fixation statistics by AOI and window.
+3. **Stateful processing for fixations**: Define a KTable named `fixationStats` that stores the aggregated fixation statistics by AOI and window.
    - Window the fixation events using a tumbling window of 5 seconds with 1 second grace period.
    - Group the fixations by AOI and aggregate them to compute fixation count, average fixation duration, and total fixation duration per AOI.
 
-5. **Stream Click events**: Create a KStream named `clickStream` to consume click events from a Kafka topic named "clicks" using the `clickConsumerOptions` which specifies the Serdes and timestamp extractor.
+4. **Stream Click events**: Create a KStream named `clickStream` to consume click events from a Kafka topic named "clicks" using the `clickConsumerOptions` which specifies the Serdes and timestamp extractor.
 
-6. **Stateful processing for click events**: Define a KTable named `clickCounts` that stores the aggregated click count by AOI and window.
+5. **Stateful processing for click events**: Define a KTable named `clickCounts` that stores the aggregated click count by AOI and window.
    - Window the click events using a tumbling window of 5 seconds with 1 second grace period.
    - Group the clicks by AOI and aggregate them to compute the click count per AOI.
 
-7. **Joining fixations and clicks**:
+6. **Joining fixations and clicks**:
    - Convert the KTables `fixationStats` and `clickCounts` to KStreams named `fixationStatsStream` and `clickCountsStream`, respectively.
-   - Join these KStreams based on their AOI using a window join with a window of 5 seconds and a 1 second grace period. The resulting KStream is named `fixationClickJoined`.
+   - Join these KStreams based on their AOI using a window join with a window of 5 seconds and a 1 second grace period. The resulting KStream is named `fixationClickJoined`. It consists of a `FixationClick` object containing both fixation and click statistics.
 
-8. **Create a KTable for FixationClick**: Define a KTable named `fixationClickTable` that stores the latest FixationClick object per AOI.
+7. **Create a KTable for FixationClick**: Define a KTable named `fixationClickTable` that stores the latest FixationClick object per AOI.
 
 
 ## Monitoring Fixation and Click Events
