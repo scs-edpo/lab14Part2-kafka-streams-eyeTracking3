@@ -49,24 +49,26 @@ The [ClicksProducer](ClicksProducer/src/main/java/ClicksProducer.java) class is 
 
 3. **Stateful processing for fixations**: Define a KTable named `fixationStats` that stores the aggregated fixation statistics by AOI and window.
    - Window the fixation events using a tumbling window of 5 seconds with 1 second grace period.
-   - Group the fixations by AOI and aggregate them to compute fixation count, average fixation duration, and total fixation duration per AOI.
+   - Group the fixations by AOI and aggregate them to compute fixation count, average fixation duration, and total fixation duration per AOI. 
+   - Materialize as "fixationStats"
 
 4. **Stream Click events**: Create a KStream named `clickStream` to consume click events from a Kafka topic named "clicks" using the `clickConsumerOptions` which specifies the Serdes and timestamp extractor.
 
 5. **Stateful processing for click events**: Define a KTable named `clickCounts` that stores the aggregated click count by AOI and window.
    - Window the click events using a tumbling window of 5 seconds with 1 second grace period.
    - Group the clicks by AOI and aggregate them to compute the click count per AOI.
+   - Materialize as "clickCount"
 
 6. **Joining fixations and clicks**:
    - Convert the KTables `fixationStats` and `clickCounts` to KStreams named `fixationStatsStream` and `clickCountsStream`, respectively.
    - Join these KStreams based on their AOI using a window join with a window of 5 seconds and a 1 second grace period. The resulting KStream is named `fixationClickJoined`. It consists of a `FixationClick` object containing both fixation and click statistics.
 
 7. **Create a KTable for FixationClick**: Define a KTable named `fixationClickTable` that stores the latest FixationClick object per AOI.
-
+   - Materialize as "FixationClickStats"
 
 ## Monitoring Fixation and Click Events
 
-In the [EyeTrackingTopology](StreamProcessing/src/main/java/magicalpipelines/topology/EyeTrackingTopology.java) class, the KTables referring to the different aggregations/joining of fixation and click events (cf. Topology Steps 4,6,8) are materialized into 3 local stores named "fixationStats", "clickCount", and "FixationClickStats".
+In the [EyeTrackingTopology](StreamProcessing/src/main/java/magicalpipelines/topology/EyeTrackingTopology.java) class, the KTables referring to the different aggregations/joining of fixation and click events (cf. Topology Steps 3,5, 7) are materialized into 3 local stores named "fixationStats", "clickCount", and "FixationClickStats".
 
 The [MonitorService](StreamProcessing/src/main/java/magicalpipelines/MonitorService.java) class is responsible for monitoring the fixation and click events using a Javalin web server. The methods `getFixationStats`, `getClickCount`, and `getFixationClickCount` are defined to query and retrieve data from the "fixationStats", "clickCount", and "FixationClickStats" local stores respectively.
 
