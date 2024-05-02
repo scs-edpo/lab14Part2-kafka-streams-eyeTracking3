@@ -85,7 +85,7 @@ public class EyeTrackingTopology {
 
         // Window config for fixation events
         TimeWindows tumblingWindowFixations =
-                TimeWindows.of(Duration.ofSeconds(5)).grace(Duration.ofSeconds(1));
+                TimeWindows.ofSizeAndGrace(Duration.ofSeconds(5), Duration.ofSeconds(1));
 
 
         // aggregation: fixation count, average fixation duration, total fixation duration per AOI
@@ -134,7 +134,7 @@ public class EyeTrackingTopology {
 
         // Window config for click events
         TimeWindows tumblingWindowClicks =
-                TimeWindows.of(Duration.ofSeconds(5)).grace(Duration.ofSeconds(1));
+                TimeWindows.ofSizeAndGrace(Duration.ofSeconds(5), Duration.ofSeconds(1));
 
         //Group clicks by AOI, Window by tumblingWindowClicks, Aggregage:count, Materialize, suppress
         KTable<Windowed<String>, Long> clickCounts =
@@ -178,9 +178,9 @@ public class EyeTrackingTopology {
                         .withValueSerde(fixationStatsSerde);
 
         JoinWindows joinWindows =
-                JoinWindows
-                        .of(Duration.ofSeconds(5))
-                        .grace(Duration.ofSeconds(1));
+                JoinWindows.ofTimeDifferenceAndGrace(
+                        Duration.ofSeconds(5),
+                        Duration.ofSeconds(1));
 
 
         KStream<String, FixationClick> fixationClickJoined =
