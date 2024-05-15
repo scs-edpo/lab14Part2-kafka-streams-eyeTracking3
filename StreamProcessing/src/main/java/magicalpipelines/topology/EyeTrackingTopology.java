@@ -172,11 +172,12 @@ public class EyeTrackingTopology {
         //clickCountsStream.print(Printed.<String, Long>toSysOut().withLabel("clickCountsStream"));
         //fixationStatsStream.print(Printed.<String, FixationStats>toSysOut().withLabel("fixationStatsStream"));
 
+        // Specify how the streams should be joined in terms of serialization and deserialization (SerDes) for the keys and values of the streams
         StreamJoined<String, FixationStats, Long> joinParams =
-                StreamJoined.with(Serdes.String(), fixationStatsSerde, Serdes.Long())
-                        .withKeySerde(Serdes.String())
-                        .withValueSerde(fixationStatsSerde);
+                StreamJoined.with(Serdes.String(), fixationStatsSerde, Serdes.Long());
 
+
+        // Define the temporal boundaries within which records from the two streams will be considered for joining
         JoinWindows joinWindows =
                 JoinWindows.ofTimeDifferenceAndGrace(
                         Duration.ofSeconds(5),
@@ -194,6 +195,7 @@ public class EyeTrackingTopology {
 
 
         KTable<String, FixationClick> fixationClickTable = fixationClickJoined.groupByKey()
+                //the table will always store the latest FixationClick value for each key
                 .reduce((aggValue, newValue) -> newValue,
                         Materialized.<String, FixationClick, KeyValueStore<Bytes, byte[]>>as("FixationClickStats")
                                 .withKeySerde(Serdes.String())
