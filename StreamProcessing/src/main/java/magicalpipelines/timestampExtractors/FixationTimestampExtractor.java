@@ -6,7 +6,7 @@ import org.apache.kafka.streams.processor.TimestampExtractor;
 
 import java.time.Instant;
 
-/** This class allows us to use event-time semantics for purchase streams */
+
 public class FixationTimestampExtractor implements TimestampExtractor {
 
     @Override
